@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Transformation — ROI Dashboard</title>
+<!-- Save this file as index.html before uploading to Netlify Drop -->
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; background: #f4f4f2; color: #1a1a1a; min-height: 100vh; }
+.page { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+.header { margin-bottom: 6px; }
+h1 { font-size: 22px; font-weight: 500; color: #1a1a1a; }
+.sub { font-size: 13px; color: #777; margin-top: 4px; margin-bottom: 20px; }
+.tab-bar { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1.5px solid #e0e0de; }
+.tab { padding: 9px 18px; font-size: 13px; cursor: pointer; border: none; background: none; color: #888; border-bottom: 2.5px solid transparent; margin-bottom: -1.5px; font-family: inherit; }
+.tab.active { color: #1a1a1a; border-bottom-color: #2d7dd2; font-weight: 500; }
+.tab:hover:not(.active) { color: #333; }
+.panel { display: none; }
+.panel.active { display: block; }
+.metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
+.metric { background: #ebebea; border-radius: 8px; padding: 13px 15px; }
+.metric .lbl { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+.metric .val { font-size: 23px; font-weight: 500; }
+.phase-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 24px; }
+.phase-card { border-radius: 10px; padding: 14px 16px; border: 1px solid; }
+.phase-card.poc  { background: #eaf3de; border-color: #97c459; }
+.phase-card.p1   { background: #faeeda; border-color: #ef9f27; }
+.phase-card.fut  { background: #fcebeb; border-color: #f09595; }
+.ph-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.poc .ph-label  { color: #3b6d11; } .p1 .ph-label  { color: #854f0b; } .fut .ph-label  { color: #a32d2d; }
+.ph-count { font-size: 26px; font-weight: 500; }
+.poc .ph-count  { color: #27500a; } .p1 .ph-count  { color: #633806; } .fut .ph-count  { color: #791f1f; }
+.ph-avg { font-size: 12px; font-weight: 500; margin-top: 4px; }
+.poc .ph-avg { color: #3b6d11; } .p1 .ph-avg { color: #854f0b; } .fut .ph-avg { color: #a32d2d; }
+.ph-names { font-size: 11px; margin-top: 6px; line-height: 1.6; }
+.poc .ph-names  { color: #3b6d11; } .p1 .ph-names  { color: #854f0b; } .fut .ph-names  { color: #a32d2d; }
+.chart-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.chart-box { background: #fff; border: 1px solid #e4e4e2; border-radius: 12px; padding: 15px 17px; }
+.chart-box h3 { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: 13px; }
+.bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.bar-label { font-size: 11px; width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #777; flex-shrink: 0; }
+.bar-track { flex: 1; background: #ebebea; border-radius: 3px; height: 10px; }
+.bar-fill  { height: 10px; border-radius: 3px; transition: width .3s; }
+.bar-val   { font-size: 11px; font-weight: 500; min-width: 42px; text-align: right; color: #333; }
+.chart-note { font-size: 11px; color: #999; margin-top: 10px; }
+.section-title { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 9px; }
+.filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-bar label { font-size: 12px; color: #777; }
+select { font-size: 12px; padding: 4px 9px; border-radius: 6px; border: 1px solid #ddd; background: #fff; color: #333; cursor: pointer; font-family: inherit; }
+.table-wrap { overflow-x: auto; margin-bottom: 18px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 7px 10px; border-bottom: 1.5px solid #e0e0de; font-weight: 500; color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; background: #fafaf9; }
+td { padding: 7px 10px; border-bottom: 1px solid #ebebea; vertical-align: middle; }
+tr:hover td { background: #f7f7f5; }
+.domain-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.d0 { background: #ddeefe; color: #0c447c; }
+.d1 { background: #dff0cc; color: #27500a; }
+.d2 { background: #fde8c8; color: #633806; }
+.d3 { background: #fce4ee; color: #72243e; }
+.phase-badge { display: inline-block; padding: 2px 9px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.pb-poc { background: #eaf3de; color: #27500a; }
+.pb-p1  { background: #faeeda; color: #633806; }
+.pb-fut { background: #fcebeb; color: #791f1f; }
+input[type=range] { width: 72px; vertical-align: middle; cursor: pointer; accent-color: #2d7dd2; }
+input[type=number] { width: 64px; padding: 3px 6px; border: 1px solid #ddd; border-radius: 5px; font-size: 12px; background: #fff; color: #333; text-align: right; font-family: inherit; }
+input[type=number]:focus { outline: 2px solid #2d7dd2; border-color: #2d7dd2; }
+.num-out { font-size: 12px; font-weight: 500; min-width: 22px; display: inline-block; text-align: right; color: #333; }
+.info-wrap { position: relative; display: inline-block; vertical-align: middle; margin-left: 5px; }
+.info-icon { width: 15px; height: 15px; border-radius: 50%; background: #ebebea; border: 1px solid #ccc; color: #888; font-size: 10px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; cursor: default; line-height: 1; font-style: normal; }
+.info-tip { display: none; position: absolute; left: 20px; top: -4px; background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 9px 11px; font-size: 12px; color: #555; width: 240px; z-index: 99; box-shadow: 0 3px 10px rgba(0,0,0,.1); line-height: 1.5; font-weight: 400; }
+.info-wrap:hover .info-tip { display: block; }
+.sav-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 24px; }
+.sav-card { border-radius: 10px; padding: 14px 16px; border: 1px solid; }
+.sav-card.total-yr  { background: #eaf3de; border-color: #97c459; }
+.sav-card.total-mo  { background: #ddeefe; border-color: #85b7eb; }
+.sav-card.total-hrs { background: #eeedfe; border-color: #afa9ec; }
+.sav-card.poc-yr    { background: #faeeda; border-color: #ef9f27; }
+.sc-lbl { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
+.total-yr .sc-lbl  { color: #3b6d11; } .total-mo .sc-lbl  { color: #0c447c; }
+.total-hrs .sc-lbl { color: #534ab7; } .poc-yr .sc-lbl    { color: #854f0b; }
+.sc-val { font-size: 22px; font-weight: 500; }
+.total-yr .sc-val  { color: #27500a; } .total-mo .sc-val  { color: #185fa5; }
+.total-hrs .sc-val { color: #3c3489; } .poc-yr .sc-val    { color: #633806; }
+.tier-sel { display: inline-flex; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
+.tier-btn { padding: 3px 9px; font-size: 12px; border: none; background: #fff; color: #888; cursor: pointer; border-right: 1px solid #ddd; font-family: inherit; }
+.tier-btn:last-child { border-right: none; }
+.tier-btn.sel { background: #ebebea; color: #1a1a1a; font-weight: 500; }
+.saving-val { font-size: 12px; font-weight: 500; color: #27500a; }
+.zero-val   { font-size: 12px; color: #bbb; }
+.footer { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+.export-btn { background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 7px 15px; font-size: 13px; cursor: pointer; font-family: inherit; color: #333; }
+.export-btn:hover { background: #f0f0ee; }
+.note { font-size: 11px; color: #aaa; margin-top: 6px; line-height: 1.6; }
+@media (max-width: 700px) {
+  .metrics, .phase-cards, .chart-section, .sav-cards { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>AI Transformation — ROI Dashboard</h1>
+    <p class="sub">18 use cases across 4 domains &nbsp;·&nbsp; adjust sliders and inputs to model your ROI</p>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('overview')">Overview &amp; ROI</button>
+    <button class="tab" onclick="switchTab('savings')">Savings Calculator</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="panel active" id="panel-overview">
+    <div class="metrics" id="metrics"></div>
+    <div class="phase-cards" id="phaseCards"></div>
+    <div class="chart-section" id="charts"></div>
+    <div class="filter-bar">
+      <label>Phase:</label>
+      <select id="phaseFilter" onchange="renderTable()">
+        <option value="">All phases</option>
+        <option>POC</option><option>Phase 1</option><option>Future</option>
+      </select>
+      <label>Domain:</label>
+      <select id="domFilter" onchange="renderTable()">
+        <option value="">All domains</option>
+        <option>Compliance &amp; Governance</option>
+        <option>Data &amp; Resource Management</option>
+        <option>Operational Excellence</option>
+        <option>Customer &amp; Commercial Growth</option>
+      </select>
+      <label>Sort:</label>
+      <select id="sortBy" onchange="renderTable()">
+        <option value="phase">Phase</option>
+        <option value="roi">ROI score</option>
+        <option value="effort">Effort (low→high)</option>
+      </select>
+    </div>
+    <div class="section-title">Use case detail — drag sliders to adjust</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Domain</th><th>Use case</th><th>Dept</th>
+          <th>Impact (1–10)</th><th>Effort (1–10)</th><th>ROI score</th><th>Phase</th>
+        </tr></thead>
+        <tbody id="ucBody"></tbody>
+      </table>
+    </div>
+    <p class="note">ROI score = Impact ÷ Effort × 10 &nbsp;·&nbsp; Phase from original assessment: green = POC, amber = Phase 1, red = Future</p>
+    <div class="footer">
+      <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+      <button class="export-btn" onclick="exportSummary()">Copy executive summary</button>
+    </div>
+  </div>
+
+  <!-- SAVINGS -->
+  <div class="panel" id="panel-savings">
+    <div class="sav-cards" id="savMetrics"></div>
+    <div class="chart-section" id="savCharts"></div>
+    <div class="section-title">Input hours, AI saving % and resource cost tier per use case</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Use case</th><th>Phase</th>
+          <th>Hrs / week</th><th>AI saving %</th><th>Resource cost</th>
+          <th>Hrs saved / wk</th><th>Monthly saving</th><th>Annual saving</th>
+        </tr></thead>
+        <tbody id="savBody"></tbody>
+      </table>
+    </div>
+    <p class="note">Resource cost tiers are based on UK average annual salaries converted to an hourly rate (salary ÷ 52 ÷ 37.5 hrs). Savings = hours saved × hourly rate × weeks per period.</p>
+    <div class="footer">
+      <button class="export-btn" onclick="exportSavingsCSV()">Export savings CSV</button>
+      <button class="export-btn" onclick="exportSavingsSummary()">Copy savings summary</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DOMAINS = ['Compliance & Governance','Data & Resource Management','Operational Excellence','Customer & Commercial Growth'];
+const DOM_CLASS = ['d0','d1','d2','d3'];
+const DOM_COLORS = ['#2d7dd2','#5a9e1a','#c47a10','#c44a7a'];
+const PHASE_ORDER = {POC:0,'Phase 1':1,Future:2};
+const PHASE_CLS   = {POC:'poc','Phase 1':'p1',Future:'fut'};
+const PB_CLS      = {POC:'pb-poc','Phase 1':'pb-p1',Future:'pb-fut'};
+const TIER_HOURLY = {Low:20000/52/37.5, Medium:35000/52/37.5, High:50000/52/37.5};
+
+const RAW = [
+  {id:1,  domain:0, name:'The Compliance Concierge', dept:'HR',  phase:'Phase 1', impact:5, effort:3, desc:'AI-assisted delivery of mandatory training programmes, encompassing regulatory requirements and professional development. Automates scheduling, tracking and completion reporting across the workforce.'},
+  {id:2,  domain:0, name:'Growth Tracker',           dept:'HR',  phase:'POC',     impact:8, effort:5, desc:'Automated management of employee objectives and performance development reviews. Streamlines the appraisal cycle, consolidates performance data and surfaces actionable insights to support talent decisions.'},
+  {id:3,  domain:0, name:'Sentinel IT',              dept:'IT',  phase:'Future',  impact:5, effort:8, desc:'Proactive monitoring and execution of IT control activities including server patching, policy compliance reviews and licence validation. Reduces manual overhead for IT governance teams.'},
+  {id:4,  domain:0, name:'Guardian AI',              dept:'',    phase:'Future',  impact:3, effort:5, desc:'Continuous review of health, safety and compliance records to identify anomalies, recurring patterns and outstanding actions. Generates prioritised recommendations for follow-up and escalation.'},
+  {id:5,  domain:0, name:'Executive Drafter',        dept:'',    phase:'Phase 1', impact:5, effort:5, desc:'Automated generation of board packs and executive reports, incorporating pro-active commentary on significant data changes. Reduces manual effort in compiling periodic reporting and accelerates initial analysis.'},
+  {id:6,  domain:1, name:'Data Integrity Engine',    dept:'',    phase:'Phase 1', impact:8, effort:8, desc:'Intelligent scanning of master data across core business systems to detect and remediate human error, formatting issues and inconsistencies. Ensures data accuracy across people, product and operational records.'},
+  {id:7,  domain:1, name:'License Optimizer',        dept:'',    phase:'Future',  impact:5, effort:8, desc:'Systematic analysis of software licence allocation versus actual usage across the organisation. Identifies consolidation and cost-saving opportunities to optimise the technology spend portfolio.'},
+  {id:8,  domain:1, name:'Market Intelligence Hub',  dept:'',    phase:'POC',     impact:8, effort:5, desc:'Aggregation and analysis of competitor activity, pricing movements and market signals. Builds a continuously updated intelligence base to inform pricing strategy, promotional planning and regional decision-making.'},
+  {id:9,  domain:1, name:'Fiscal Forensic Bot',      dept:'',    phase:'Phase 1', impact:5, effort:8, desc:'Automated review of financial transactions, supplier invoices and contract terms to identify savings opportunities, rebate entitlements and renewal obligations. Supports P&L reconciliation and spend governance.'},
+  {id:10, domain:2, name:'Precision Factory',        dept:'',    phase:'Phase 1', impact:5, effort:5, desc:'Analysis of manufacturing system logs and operational timings to identify process inefficiencies and improvement opportunities. Provides data-driven recommendations to enhance throughput and reduce waste.'},
+  {id:11, domain:2, name:'Omni-Agent QA',            dept:'',    phase:'Phase 1', impact:8, effort:7, desc:'Automated quality assurance across all customer service interactions, rating agent performance against defined standards. Integrates with existing CRM and service platforms to provide real-time coaching and compliance oversight.'},
+  {id:12, domain:2, name:'Smart Scheduler',          dept:'',    phase:'POC',     impact:8, effort:7, desc:'Workforce scheduling optimisation using historical patterns and demand forecasting to align resource deployment with expected footfall and operational requirements. Reduces overstaffing and service gaps.'},
+  {id:13, domain:2, name:'Sales Pulse',              dept:'',    phase:'Future',  impact:5, effort:8, desc:'Real-time monitoring of sales performance across the business, surfacing trading trends and anomalies. Enables targeted incentive programmes and timely management interventions to drive commercial outcomes.'},
+  {id:14, domain:3, name:'Dynamic Yield Manager',    dept:'',    phase:'POC',     impact:8, effort:5, desc:'Personalisation engine that identifies the most cost-effective means of converting sales opportunities, leveraging logistics availability and operational capacity. Delivers tailored customer propositions to maximise margin and satisfaction.'},
+  {id:15, domain:3, name:'The Conversion Catalyst',  dept:'',    phase:'Future',  impact:5, effort:8, desc:'Cross-channel customer behaviour analysis to identify conversion opportunities and improve quote-to-order rates. Integrates with CDP and sales systems to surface actionable insights for sales and marketing teams.'},
+  {id:16, domain:3, name:'Travel Concierge AI',      dept:'',    phase:'Future',  impact:3, effort:5, desc:'Intelligent management of business travel and accommodation requirements. Identifies cost reduction opportunities through optimised booking, policy compliance and supplier consolidation.'},
+  {id:17, domain:3, name:'Site Scout',               dept:'',    phase:'Phase 1', impact:5, effort:8, desc:'Data-driven evaluation of potential retail or operational locations, combining historic performance data with external market signals to produce ranked shortlists. Reduces reliance on manual research and third-party consultancy.'},
+  {id:18, domain:3, name:'KYC',                      dept:'',    phase:'POC',     impact:8, effort:7, desc:'AI-generated customer summaries surfaced at the point of interaction, equipping service agents and colleagues with relevant account history, preferences and outstanding matters to improve first-contact resolution and satisfaction.'},
+];
+
+let state = RAW.map(u=>({...u, hrs:10, savPct:20, tier:'Medium'}));
+
+const roi  = u => +(u.impact/u.effort*10).toFixed(1);
+const hrsSaved = u => +(u.hrs*u.savPct/100).toFixed(1);
+const monthlySaving = u => Math.round(hrsSaved(u)*TIER_HOURLY[u.tier]*52/12);
+const annualSaving  = u => Math.round(hrsSaved(u)*TIER_HOURLY[u.tier]*52);
+const gbp  = n => '£'+n.toLocaleString('en-GB');
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.textContent.trim().startsWith(t==='overview'?'Overview':'Savings')));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+  if(t==='savings'){ updateSavMetrics(); updateSavCharts(); renderSavTable(); }
+}
+
+/* ── OVERVIEW ── */
+function updateMetrics(){
+  const scores=state.map(roi);
+  const avg=(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
+  const poc=state.filter(u=>u.phase==='POC');
+  const pocAvg=(poc.map(roi).reduce((a,b)=>a+b,0)/poc.length).toFixed(1);
+  const impPct=Math.round(state.reduce((a,u)=>a+u.impact,0)/(state.length*10)*100);
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric"><div class="lbl">Total use cases</div><div class="val" style="color:#185fa5">${state.length}</div></div>
+    <div class="metric"><div class="lbl">Overall avg ROI</div><div class="val" style="color:#3b6d11">${avg}/10</div></div>
+    <div class="metric"><div class="lbl">POC avg ROI</div><div class="val" style="color:#534ab7">${pocAvg}/10</div></div>
+    <div class="metric"><div class="lbl">Impact coverage</div><div class="val" style="color:#854f0b">${impPct}%</div></div>`;
+}
+
+function updatePhaseCards(){
+  document.getElementById('phaseCards').innerHTML=['POC','Phase 1','Future'].map(ph=>{
+    const it=state.filter(u=>u.phase===ph);
+    const av=it.length?(it.map(roi).reduce((a,b)=>a+b,0)/it.length).toFixed(1):'—';
+    const lb=ph==='POC'?'POC — proof of concept':ph==='Phase 1'?'Phase 1 rollout':'Future phases';
+    const c=ph==='POC'?'#3b6d11':ph==='Phase 1'?'#854f0b':'#a32d2d';
+    return `<div class="phase-card ${PHASE_CLS[ph]}">
+      <div class="ph-label">${lb}</div>
+      <div class="ph-count">${it.length} <span style="font-size:14px;font-weight:400">use cases</span></div>
+      <div class="ph-avg">Avg ROI: ${av}/10</div>
+      <div class="ph-names">${it.map(u=>u.name).join(' · ')}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateCharts(){
+  const ds=DOMAINS.map((d,i)=>{const it=state.filter(u=>u.domain===i);return{label:d.split(' ')[0],avg:it.length?+(it.map(roi).reduce((a,b)=>a+b,0)/it.length).toFixed(1):0,color:DOM_COLORS[i]};});
+  const maxD=Math.max(...ds.map(d=>d.avg),1);
+  const ps=['POC','Phase 1','Future'].map((p,i)=>{const it=state.filter(u=>u.phase===p);return{label:p,avg:it.length?+(it.map(roi).reduce((a,b)=>a+b,0)/it.length).toFixed(1):0,color:['#5a9e1a','#c47a10','#d94040'][i]};});
+  const maxP=Math.max(...ps.map(d=>d.avg),1);
+  document.getElementById('charts').innerHTML=`
+    <div class="chart-box"><h3>Avg ROI by domain</h3>
+      ${ds.map(d=>`<div class="bar-row"><div class="bar-label">${d.label}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.avg/maxD*100)}%;background:${d.color}"></div></div><div class="bar-val">${d.avg}/10</div></div>`).join('')}
+    </div>
+    <div class="chart-box"><h3>Avg ROI by phase</h3>
+      ${ps.map(d=>`<div class="bar-row"><div class="bar-label">${d.label}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.avg/maxP*100)}%;background:${d.color}"></div></div><div class="bar-val">${d.avg}/10</div></div>`).join('')}
+      <div class="chart-note">Higher ROI in POC validates the selection of quick-win, high-impact items first.</div>
+    </div>`;
+}
+
+function renderTable(){
+  const phF=document.getElementById('phaseFilter').value;
+  const domF=document.getElementById('domFilter').value;
+  const sortK=document.getElementById('sortBy').value;
+  let rows=[...state];
+  if(phF) rows=rows.filter(u=>u.phase===phF);
+  if(domF) rows=rows.filter(u=>DOMAINS[u.domain]===domF);
+  if(sortK==='roi') rows.sort((a,b)=>roi(b)-roi(a));
+  else if(sortK==='effort') rows.sort((a,b)=>a.effort-b.effort);
+  else rows.sort((a,b)=>PHASE_ORDER[a.phase]-PHASE_ORDER[b.phase]||a.id-b.id);
+  document.getElementById('ucBody').innerHTML=rows.map(u=>`<tr>
+    <td style="color:#aaa">${u.id}</td>
+    <td><span class="domain-badge ${DOM_CLASS[u.domain]}">${DOMAINS[u.domain].split(' ')[0]}</span></td>
+    <td style="font-weight:500;max-width:160px">${u.name}<span class="info-wrap"><span class="info-icon">i</span><span class="info-tip">${u.desc}</span></span></td>
+    <td>${u.dept||'—'}</td>
+    <td><input type="range" min="1" max="10" step="1" value="${u.impact}" oninput="updateROI(${u.id},'impact',+this.value,this.nextElementSibling)"><span class="num-out">${u.impact}</span></td>
+    <td><input type="range" min="1" max="10" step="1" value="${u.effort}" oninput="updateROI(${u.id},'effort',+this.value,this.nextElementSibling)"><span class="num-out">${u.effort}</span></td>
+    <td style="font-weight:500">${roi(u)}/10</td>
+    <td><span class="phase-badge ${PB_CLS[u.phase]}">${u.phase}</span></td>
+  </tr>`).join('');
+}
+
+function updateROI(id,field,val,span){
+  const u=state.find(u=>u.id===id); u[field]=val; span.textContent=val;
+  span.closest('tr').querySelectorAll('td')[6].textContent=roi(u)+'/10';
+  updateMetrics(); updatePhaseCards(); updateCharts();
+}
+
+/* ── SAVINGS ── */
+function updateSavMetrics(){
+  const tYr=state.reduce((a,u)=>a+annualSaving(u),0);
+  const tMo=state.reduce((a,u)=>a+monthlySaving(u),0);
+  const tHrs=+state.reduce((a,u)=>a+hrsSaved(u),0).toFixed(1);
+  const pYr=state.filter(u=>u.phase==='POC').reduce((a,u)=>a+annualSaving(u),0);
+  document.getElementById('savMetrics').innerHTML=`
+    <div class="sav-card total-yr"><div class="sc-lbl">Total annual saving</div><div class="sc-val">${gbp(tYr)}</div></div>
+    <div class="sav-card total-mo"><div class="sc-lbl">Total monthly saving</div><div class="sc-val">${gbp(tMo)}</div></div>
+    <div class="sav-card total-hrs"><div class="sc-lbl">Hrs saved / week</div><div class="sc-val">${tHrs}</div></div>
+    <div class="sav-card poc-yr"><div class="sc-lbl">POC annual saving</div><div class="sc-val">${gbp(pYr)}</div></div>`;
+}
+
+function updateSavCharts(){
+  const phases=['POC','Phase 1','Future'];
+  const pColors=['#5a9e1a','#c47a10','#d94040'];
+  const pSav=phases.map(p=>state.filter(u=>u.phase===p).reduce((a,u)=>a+annualSaving(u),0));
+  const maxP=Math.max(...pSav,1);
+  const dSav=DOMAINS.map((_,i)=>state.filter(u=>u.domain===i).reduce((a,u)=>a+annualSaving(u),0));
+  const maxD=Math.max(...dSav,1);
+  document.getElementById('savCharts').innerHTML=`
+    <div class="chart-box"><h3>Annual saving by phase</h3>
+      ${phases.map((p,i)=>`<div class="bar-row"><div class="bar-label">${p}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(pSav[i]/maxP*100)}%;background:${pColors[i]}"></div></div><div class="bar-val">${gbp(pSav[i])}</div></div>`).join('')}
+    </div>
+    <div class="chart-box"><h3>Annual saving by domain</h3>
+      ${DOMAINS.map((d,i)=>`<div class="bar-row"><div class="bar-label">${d.split(' ')[0]}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(dSav[i]/maxD*100)}%;background:${DOM_COLORS[i]}"></div></div><div class="bar-val">${gbp(dSav[i])}</div></div>`).join('')}
+    </div>`;
+}
+
+function renderSavTable(){
+  const rows=[...state].sort((a,b)=>PHASE_ORDER[a.phase]-PHASE_ORDER[b.phase]||a.id-b.id);
+  document.getElementById('savBody').innerHTML=rows.map(u=>{
+    const hs=hrsSaved(u),mo=monthlySaving(u),yr=annualSaving(u);
+    return `<tr>
+      <td style="color:#aaa">${u.id}</td>
+      <td style="font-weight:500;max-width:150px">${u.name}<span class="info-wrap"><span class="info-icon">i</span><span class="info-tip">${u.desc}</span></span></td>
+      <td><span class="phase-badge ${PB_CLS[u.phase]}">${u.phase}</span></td>
+      <td><input type="number" min="0" max="168" step="0.5" value="${u.hrs}" oninput="updateSav(${u.id},'hrs',+this.value)"></td>
+      <td><input type="number" min="0" max="100" step="5" value="${u.savPct}" style="width:54px" oninput="updateSav(${u.id},'savPct',+this.value)"><span style="font-size:12px;color:#999;margin-left:2px">%</span></td>
+      <td><div class="tier-sel">
+        <button class="tier-btn${u.tier==='Low'?' sel':''}"    onclick="setTier(${u.id},'Low',this)">Low</button>
+        <button class="tier-btn${u.tier==='Medium'?' sel':''}" onclick="setTier(${u.id},'Medium',this)">Mid</button>
+        <button class="tier-btn${u.tier==='High'?' sel':''}"   onclick="setTier(${u.id},'High',this)">High</button>
+      </div></td>
+      <td id="hs-${u.id}" class="${hs>0?'saving-val':'zero-val'}">${hs>0?hs:'—'}</td>
+      <td id="mo-${u.id}" class="${mo>0?'saving-val':'zero-val'}">${mo>0?gbp(mo):'—'}</td>
+      <td id="yr-${u.id}" class="${yr>0?'saving-val':'zero-val'}" style="font-weight:${yr>0?500:400}">${yr>0?gbp(yr):'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateSav(id,field,val){
+  const u=state.find(u=>u.id===id); u[field]=val;
+  const hs=hrsSaved(u),mo=monthlySaving(u),yr=annualSaving(u);
+  const hEl=document.getElementById('hs-'+id),mEl=document.getElementById('mo-'+id),yEl=document.getElementById('yr-'+id);
+  hEl.textContent=hs>0?hs:'—'; hEl.className=hs>0?'saving-val':'zero-val';
+  mEl.textContent=mo>0?gbp(mo):'—'; mEl.className=mo>0?'saving-val':'zero-val';
+  yEl.textContent=yr>0?gbp(yr):'—'; yEl.className=yr>0?'saving-val':'zero-val'; yEl.style.fontWeight=yr>0?500:400;
+  updateSavMetrics(); updateSavCharts();
+}
+
+function setTier(id,tier,btn){
+  const u=state.find(u=>u.id===id); u.tier=tier;
+  btn.closest('.tier-sel').querySelectorAll('.tier-btn').forEach(b=>b.classList.toggle('sel',b===btn));
+  updateSav(id,'tier',tier);
+}
+
+function dl(data,name){
+  const csv=data.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download=name; a.click();
+}
+
+function exportCSV(){
+  dl([['#','Domain','Use Case','Dept','Phase','Impact','Effort','ROI Score'],
+    ...state.map(u=>[u.id,DOMAINS[u.domain],u.name,u.dept||'',u.phase,u.impact,u.effort,roi(u)])],'ai-roi-dashboard.csv');
+}
+
+function exportSavingsCSV(){
+  dl([['#','Use Case','Phase','Hrs/Week','AI Saving %','Resource Tier','Hrs Saved/Week','Monthly Saving (£)','Annual Saving (£)'],
+    ...state.map(u=>[u.id,u.name,u.phase,u.hrs,u.savPct,u.tier,hrsSaved(u),monthlySaving(u),annualSaving(u)])],'ai-savings.csv');
+}
+
+function exportSummary(){
+  const poc=state.filter(u=>u.phase==='POC').sort((a,b)=>roi(b)-roi(a));
+  const p1=state.filter(u=>u.phase==='Phase 1').sort((a,b)=>roi(b)-roi(a));
+  const fut=state.filter(u=>u.phase==='Future');
+  const avg=(state.map(roi).reduce((a,b)=>a+b,0)/state.length).toFixed(1);
+  const pocAvg=(poc.map(roi).reduce((a,b)=>a+b,0)/poc.length).toFixed(1);
+  const txt=`AI Transformation — Executive Summary\n${'='.repeat(44)}\n\n${state.length} AI use cases assessed across 4 domains.\nOverall avg ROI score: ${avg}/10\n\nPHASING PLAN\n------------\nPOC (${poc.length} use cases, avg ROI ${pocAvg}/10):\n${poc.map((u,i)=>`  ${i+1}. ${u.name} — ROI ${roi(u)}/10`).join('\n')}\n\nPhase 1 (${p1.length} use cases):\n${p1.map((u,i)=>`  ${i+1}. ${u.name} — ROI ${roi(u)}/10`).join('\n')}\n\nFuture phases (${fut.length} use cases):\n${fut.map((u,i)=>`  ${i+1}. ${u.name}`).join('\n')}\n\nRECOMMENDATION\n--------------\nBegin with POC use cases to demonstrate measurable ROI quickly and build executive confidence. Phase 1 follows with broader operational rollout. Future-phase items are deprioritised pending POC outcomes.`;
+  navigator.clipboard.writeText(txt).then(()=>alert('Executive summary copied to clipboard!')).catch(()=>prompt('Copy this summary:',txt));
+}
+
+function exportSavingsSummary(){
+  const tYr=state.reduce((a,u)=>a+annualSaving(u),0);
+  const tMo=state.reduce((a,u)=>a+monthlySaving(u),0);
+  const tHrs=+state.reduce((a,u)=>a+hrsSaved(u),0).toFixed(1);
+  const pYr=state.filter(u=>u.phase==='POC').reduce((a,u)=>a+annualSaving(u),0);
+  const top=state.filter(u=>annualSaving(u)>0).sort((a,b)=>annualSaving(b)-annualSaving(a)).slice(0,5);
+  const txt=`AI Transformation — Savings Summary\n${'='.repeat(44)}\n\nTotal annual saving:  ${gbp(tYr)}\nTotal monthly saving: ${gbp(tMo)}\nHours saved per week: ${tHrs}\nPOC annual saving:    ${gbp(pYr)}\n\nTop opportunities by saving:\n${top.map((u,i)=>`  ${i+1}. ${u.name} (${u.phase}) — ${gbp(annualSaving(u))}/yr, ${hrsSaved(u)} hrs/wk saved`).join('\n')}\n\nNote: Savings calculated using UK average annual salaries by resource tier, converted to hourly rates (salary ÷ 52 ÷ 37.5 hrs).`;
+  navigator.clipboard.writeText(txt).then(()=>alert('Savings summary copied to clipboard!')).catch(()=>prompt('Copy this summary:',txt));
+}
+
+window.onload = function(){
+  updateMetrics(); updatePhaseCards(); updateCharts(); renderTable();
+};
+</script>
+</body>
+</html>
